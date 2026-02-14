@@ -1,0 +1,172 @@
+@model Telemedicine.Web.Models.SummaryViewModel
+@{
+    ViewData["Title"] = "Consultation Summary";
+    var currentUserRole = Context.Request.Cookies["userRole"];
+    bool isDoctor = currentUserRole == "Doctor";
+}
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-file-medical"></i> Consultation Summary</h2>
+        <a href="/Dashboard" class="btn btn-outline-primary"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+    </div>
+
+    <div class="row">
+        <!-- Chat History Column -->
+        <div class="col-md-7">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0 text-primary"><i class="bi bi-chat-dots-fill"></i> Chat History</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.ChatHistory.Count == 0)
+                    {
+                        <div class="p-4 text-center text-muted">No chat messages.</div>
+                    }
+                    else
+                    {
+                        <div class="list-group list-group-flush" style="max-height: 600px; overflow-y: auto;">
+                            @foreach (var msg in Model.ChatHistory)
+                            {
+                                <div class="list-group-item border-0 py-3">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1 text-dark fw-bold">@msg.SenderName</h6>
+                                        <small class="text-muted">@msg.Timestamp.ToLocalTime().ToString("g")</small>
+                                    </div>
+                                    <p class="mb-1 text-secondary">@msg.Message</p>
+                                    @if (!string.IsNullOrEmpty(msg.FileUrl))
+                                    {
+                                        <small><a href="@msg.FileUrl" target="_blank" class="text-decoration-none"><i class="bi bi-paperclip"></i> View Attachment</a></small>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Recommendation & Notes -->
+        <div class="col-md-5">
+            @if (isDoctor)
+            {
+                <!-- Doctor: Add/Edit Recommendation -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="bi bi-prescription2"></i> Recommendation</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Patient Recommendation / Summary</label>
+                            <textarea id="recText" class="form-control" rows="4" placeholder="Write recommendation or summary for the patient...">@Model.Recommendation</textarea>
+                        </div>
+                        <button class="btn btn-warning w-100" onclick="saveRecommendation()">
+                            <i class="bi bi-save"></i> Save Recommendation
+                        </button>
+                        <small id="recStatus" class="d-block mt-2"></small>
+                    </div>
+                </div>
+
+                <!-- Doctor: Internal Notes -->
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-journal-medical"></i> Internal Notes</h5>
+                    </div>
+                    <div class="card-body overflow-auto" style="height: 400px;">
+                        @if (Model.Notes.Count == 0)
+                        {
+                            <p class="text-muted text-center py-5">No internal notes recorded.</p>
+                        }
+                        else
+                        {
+                             <ul class="timeline">
+                                @foreach (var note in Model.Notes)
+                                {
+                                    <li class="timeline-item">
+                                        <p class="text-muted small mb-1">@note.CreatedAt.ToLocalTime().ToString("g")</p>
+                                        <div class="bg-light p-2 rounded mb-2">
+                                            <p class="mb-0 small">@note.Content</p>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- Patient: View Recommendation Only -->
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> Doctor's Recommendation</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (string.IsNullOrEmpty(Model.Recommendation))
+                        {
+                            <div class="text-center py-5 text-muted">
+                                <i class="bi bi-hourglass-split fs-1"></i>
+                                <p class="mt-3">The doctor hasn't added a recommendation yet.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="p-3 bg-light rounded border mb-3">
+                                <p class="mb-0" style="white-space: pre-wrap;">@Model.Recommendation</p>
+                            </div>
+                            <div class="alert alert-info small">
+                                <i class="bi bi-info-circle"></i> This recommendation serves as the official summary of your consultation.
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    async function saveRecommendation() {
+        const text = document.getElementById('recText').value;
+        const status = document.getElementById('recStatus');
+        const roomId = '@Model.RoomId';
+        // Get meta or default
+        const apiMeta = document.querySelector('meta[name="api-base"]'); 
+        const API_BASE = apiMeta ? apiMeta.content : 'https://localhost:7182';
+        
+        const tokenCookie = document.cookie.split(';').find(c => c.trim().startsWith('jwtToken='));
+        const TOKEN = tokenCookie ? tokenCookie.split('=')[1] : null;
+
+        status.innerText = 'Saving...';
+        status.className = 'd-block mt-2 text-muted';
+
+        try {
+            const res = await fetch(`${API_BASE}/api/Consultation/recommendation`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${TOKEN}`
+                },
+                body: JSON.stringify({ roomId: roomId, details: text })
+            });
+
+            if (res.ok) {
+                status.innerText = 'Saved successfully!';
+                status.className = 'd-block mt-2 text-success';
+            } else {
+                status.innerText = 'Failed to save.';
+                status.className = 'd-block mt-2 text-danger';
+            }
+        } catch (e) {
+            status.innerText = 'Error saving.';
+            status.className = 'd-block mt-2 text-danger';
+        }
+    }
+</script>
+
+<style>
+    .timeline { list-style: none; padding-left: 0; }
+    .timeline-item { border-left: 2px solid #ddd; padding-left: 15px; margin-bottom: 20px; position: relative; }
+    .timeline-item::before { content: ''; position: absolute; left: -6px; top: 0; width: 10px; height: 10px; border-radius: 50%; background: #0dcaf0; }
+</style>
+<meta name="api-base" content="@ViewBag.ApiBaseUrl" />

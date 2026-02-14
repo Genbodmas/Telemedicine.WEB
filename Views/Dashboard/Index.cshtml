@@ -1,0 +1,199 @@
+@model Telemedicine.Web.Models.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<meta name="api-base" content="@ViewBag.ApiBaseUrl" />
+
+<div class="container mt-4">
+    <h2 class="mb-4">Dashboard <span class="badge bg-secondary">@Model.Role</span></h2>
+    
+    @if(TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if(TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Patient: Book Appointment Section -->
+        @if (Model.Role == "Patient")
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-calendar-plus"></i> Book Appointment</h5>
+                    </div>
+                    <div class="card-body">
+                        <form asp-action="BookAppointment" method="post">
+                            <div class="mb-3">
+                                <label class="form-label">Select Doctor</label>
+                                <select name="doctorId" id="doctorSelect" class="form-select" required>
+                                    <option value="">-- Choose Doctor --</option>
+                                    @foreach (var doc in Model.Doctors)
+                                    {
+                                        <option value="@doc.Id">@doc.FullName</option>
+                                    }
+                                </select>
+                            </div>
+                            <!-- Doctor Availability Display -->
+                            <div id="availabilityInfo" class="mb-3" style="display:none;">
+                                <label class="form-label text-muted small">Available Hours</label>
+                                <div id="availabilitySlots" class="list-group list-group-flush small"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Select Date & Time</label>
+                                <input type="datetime-local" name="scheduledTime" id="bookTime" class="form-control" required
+                                       min="@DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm")" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Reason for Visit</label>
+                                <textarea name="reason" id="bookReason" class="form-control" rows="3" placeholder="Please describe your symptoms or reason for visit..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Book Now</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Doctor: Set Availability Section -->
+        @if (Model.Role == "Doctor")
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-clock"></i> My Availability</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="myAvailabilitySlots" class="mb-3">
+                            <p class="text-muted text-center small">Loading...</p>
+                        </div>
+                        <hr />
+                        <h6>Add / Update Slot</h6>
+                        <div class="mb-2">
+                            <label class="form-label small">Day</label>
+                            <select id="availDay" class="form-select form-select-sm">
+                                <option value="0">Sunday</option>
+                                <option value="1" selected>Monday</option>
+                                <option value="2">Tuesday</option>
+                                <option value="3">Wednesday</option>
+                                <option value="4">Thursday</option>
+                                <option value="5">Friday</option>
+                                <option value="6">Saturday</option>
+                            </select>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col">
+                                <label class="form-label small">Start</label>
+                                <input type="time" id="availStart" class="form-control form-control-sm" value="09:00" />
+                            </div>
+                            <div class="col">
+                                <label class="form-label small">End</label>
+                                <input type="time" id="availEnd" class="form-control form-control-sm" value="17:00" />
+                            </div>
+                        </div>
+                        <button class="btn btn-info btn-sm w-100" id="btnSetAvailability">
+                            <i class="bi bi-check-circle"></i> Save Slot
+                        </button>
+                        <small id="availStatus" class="text-muted d-block mt-1"></small>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- My Appointments Section -->
+        <div class="@(Model.Role == "Patient" || Model.Role == "Doctor" ? "col-md-8" : "col-md-12")">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-calendar-check"></i> My Appointments</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Appointments.Count == 0)
+                    {
+                        <p class="text-muted text-center py-4">No appointments found.</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>With</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var appt in Model.Appointments)
+                                    {
+                                        <tr>
+                                            <td>@appt.ScheduledTime.ToString("g")</td>
+                                            <td>@appt.CounterpartName</td>
+                                            <td>
+                                                @{
+                                                    var badgeClass = appt.Status switch {
+                                                        "Pending" => "warning",
+                                                        "Completed" => "success",
+                                                        "InProgress" => "primary",
+                                                        _ => "secondary"
+                                                    };
+                                                }
+                                                <span class="badge bg-@badgeClass">@appt.Status</span>
+                                            </td>
+                                            <td>
+                                                @if (appt.Status == "Completed")
+                                                {
+                                                    <!-- Completed call — View Summary -->
+                                                    <a href="/Room/Summary?id=@appt.RoomId" class="btn btn-sm btn-outline-success">
+                                                        <i class="bi bi-file-earmark-text"></i> View Summary
+                                                    </a>
+                                                }
+                                                else if (appt.RoomId.HasValue)
+                                                {
+                                                    <!-- Active call — Join -->
+                                                    <a href="/Room/PreRoom/@(appt.RoomId)" class="btn btn-sm btn-primary">
+                                                        <i class="bi bi-camera-video-fill"></i> Join Call
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    @if (Model.Role == "Doctor")
+                                                    {
+                                                        <form asp-action="StartConsultation" method="post" class="d-inline">
+                                                            <input type="hidden" name="appointmentId" value="@appt.AppointmentId" />
+                                                            <button type="submit" class="btn btn-sm btn-primary">
+                                                                <i class="bi bi-play-fill"></i> Start Consultation
+                                                            </button>
+                                                        </form>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted small">Waiting for Doctor</span>
+                                                    }
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="/js/Dashboard/dashboard.js?v=5"></script>
+}

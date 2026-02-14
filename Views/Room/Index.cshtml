@@ -1,0 +1,163 @@
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+@{
+    ViewData["Title"] = "Consultation Room";
+    Layout = null; /* Full-page layout, no navbar */
+    var roomId = ViewBag.RoomId;
+    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    var role = User.Claims.FirstOrDefault(c => c.Type == "Role" || c.Type == System.Security.Claims.ClaimTypes.Role)?.Value;
+    var isDoctor = role == "Doctor";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Consultation Room</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/Room/room.css" />
+</head>
+<body>
+
+<!-- Top Bar -->
+<header class="top-bar">
+    <div class="top-left">
+        <span class="brand"><i class="bi bi-heart-pulse"></i> TeleMed</span>
+    </div>
+    <div class="top-center">
+        <span class="session-timer" id="sessionTimer">00:00:00</span>
+        <span class="connection-dot" id="connectionDot" title="Connecting..."></span>
+    </div>
+    <div class="top-right">
+        <span class="room-code"><i class="bi bi-link-45deg"></i> @roomId</span>
+    </div>
+</header>
+
+<!-- Main Content -->
+<div class="main-content">
+    <!-- Video Section (Left ~65%) -->
+    <section class="video-section">
+        <!-- Remote Video -->
+        <div class="video-card remote-card">
+            <video id="remoteVideo" autoplay playsinline></video>
+            <div class="video-name-tag">
+                <i class="bi bi-person-fill"></i> Remote Participant
+            </div>
+            <div class="no-video-placeholder" id="remoteVideoPlaceholder">
+                <div class="avatar-circle"><i class="bi bi-person-fill"></i></div>
+                <p>Waiting for participant...</p>
+            </div>
+        </div>
+
+        <!-- Local Video (Self View) -->
+        <div class="video-card local-card">
+            <video id="localVideo" autoplay muted playsinline></video>
+            <div class="video-name-tag">
+                <i class="bi bi-person-fill"></i> You
+            </div>
+        </div>
+
+        <!-- Bottom Controls -->
+        <div class="controls-bar">
+            <button id="btnToggleAudio" class="ctrl-btn" title="Mic">
+                <i class="bi bi-mic-fill"></i>
+            </button>
+            <button id="btnToggleVideo" class="ctrl-btn" title="Camera">
+                <i class="bi bi-camera-video-fill"></i>
+            </button>
+            <button id="btnScreenShare" class="ctrl-btn" title="Share Screen">
+                <i class="bi bi-display"></i>
+            </button>
+            <button id="btnEndCall" class="ctrl-btn @(isDoctor ? "ctrl-btn-end" : "ctrl-btn-leave")" title="@(isDoctor ? "End Consultation" : "Leave Room")">
+                <i class="bi @(isDoctor ? "bi-telephone-x-fill" : "bi-door-open-fill")"></i>
+            </button>
+        </div>
+    </section>
+
+    <!-- Right Panel (Chat + Notes ~35%) -->
+    <aside class="right-panel">
+        <!-- Tab Navigation -->
+        <div class="panel-tabs">
+            <button class="panel-tab active" data-target="chatPanel" id="tabChat">
+                <i class="bi bi-chat-left-text"></i> Chat
+                <span class="unread-count" id="unreadCount" style="display:none;">0</span>
+            </button>
+            <button class="panel-tab" data-target="notesPanel" id="tabNotes">
+                <i class="bi bi-journal-medical"></i> Notes
+            </button>
+        </div>
+
+        <!-- Chat Panel -->
+        <div class="panel-body" id="chatPanel">
+            <div class="chat-messages" id="chatMessages">
+                <div class="chat-empty-state">
+                    <i class="bi bi-chat-square-dots" style="font-size: 2rem; opacity: 0.4;"></i>
+                    <p>No messages yet. Start the conversation!</p>
+                </div>
+            </div>
+            <div class="chat-compose">
+                <input type="text" id="messageInput" class="chat-input" placeholder="Type a message..." autocomplete="off" />
+                <button class="chat-send-btn" id="btnSendMessage" title="Send">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Notes Panel (hidden by default, toggled by tab) -->
+        <div class="panel-body" id="notesPanel" style="display:none;">
+            <div class="notes-body">
+                <div class="notes-info">
+                    <i class="bi bi-shield-lock"></i> Notes are private and visible only to you.
+                </div>
+                <textarea id="noteContent" class="notes-textarea" placeholder="Write consultation notes here..."></textarea>
+                <button id="btnSaveNote" class="btn-save-note">
+                    <i class="bi bi-check2-circle"></i> Save Note
+                </button>
+                <small id="noteStatus" class="note-status"></small>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<!-- Custom Modal -->
+<div class="custom-modal-backdrop" id="customModalBackdrop" style="display:none;">
+    <div class="custom-modal">
+        <div class="custom-modal-header">
+            <h5 id="modalTitle">Notification</h5>
+        </div>
+        <div class="custom-modal-body" id="modalBody"></div>
+        <div class="custom-modal-footer">
+            <button class="modal-btn" id="modalOkBtn">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="custom-modal-backdrop" id="confirmModalBackdrop" style="display:none;">
+    <div class="custom-modal">
+        <div class="custom-modal-header">
+            <h5 id="confirmTitle">End Consultation?</h5>
+        </div>
+        <div class="custom-modal-body" id="confirmBody">Are you sure you want to end this consultation?</div>
+        <div class="custom-modal-footer">
+            <button class="modal-btn modal-btn-cancel" id="confirmCancelBtn">Cancel</button>
+            <button class="modal-btn modal-btn-danger" id="confirmOkBtn">End Call</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+<script>
+    const API_BASE_URL = '@Configuration["ApiSettings:BaseUrl"]';
+    const ROOM_ID = '@roomId';
+    const CURRENT_USER_ID = '@currentUserId';
+    const TOKEN = localStorage.getItem("jwtToken");
+    const IS_DOCTOR = @Json.Serialize(isDoctor);
+</script>
+<script src="/js/Room/room-init.js?v=5"></script>
+<script src="/js/Room/webrtc.js?v=5"></script>
+</body>
+</html>
+
