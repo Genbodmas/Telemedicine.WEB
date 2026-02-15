@@ -4,6 +4,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Auth/Login";
+        options.LogoutPath = "/Auth/Logout";
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+    });
+
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddHttpClient<Telemedicine.Web.Utils.ApiHelper>()
@@ -30,6 +38,7 @@ app.UseRouting();
 
 app.UseMiddleware<Telemedicine.Web.Middleware.TokenExpiryMiddleware>();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();

@@ -11,11 +11,16 @@
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2><i class="bi bi-file-medical"></i> Consultation Summary</h2>
-        <a href="/Dashboard" class="btn btn-outline-primary"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+        <div>
+            <a href="/Dashboard" class="btn btn-outline-primary me-2"><i class="bi bi-arrow-left"></i> Dashboard</a>
+            <button onclick="downloadPdf()" class="btn btn-danger" id="btnDownloadPdf">
+                <i class="bi bi-file-earmark-pdf-fill"></i> Download PDF
+            </button>
+        </div>
     </div>
 
     <div class="row">
-        <!-- Chat History Column -->
+
         <div class="col-md-7">
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-white border-bottom">
@@ -49,11 +54,11 @@
             </div>
         </div>
 
-        <!-- Right Column: Recommendation & Notes -->
+
         <div class="col-md-5">
             @if (isDoctor)
             {
-                <!-- Doctor: Add/Edit Recommendation -->
+
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-warning text-dark">
                         <h5 class="mb-0"><i class="bi bi-prescription2"></i> Recommendation</h5>
@@ -70,7 +75,7 @@
                     </div>
                 </div>
 
-                <!-- Doctor: Internal Notes -->
+
                 <div class="card shadow-sm h-100">
                     <div class="card-header bg-info text-white">
                         <h5 class="mb-0"><i class="bi bi-journal-medical"></i> Internal Notes</h5>
@@ -99,7 +104,7 @@
             }
             else
             {
-                <!-- Patient: View Recommendation Only -->
+
                 <div class="card shadow-sm h-100">
                     <div class="card-header bg-success text-white">
                         <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> Doctor's Recommendation</h5>
@@ -129,30 +134,60 @@
 </div>
 
 <script>
+    const apiMeta = document.querySelector('meta[name="api-base"]'); 
+    const API_BASE = (apiMeta && apiMeta.content) ? apiMeta.content : 'https://localhost:7182';
+
+    // Helper to get cookie
+    const getCookie = (name) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    };
+
+    async function downloadPdf() {
+        const btn = document.getElementById('btnDownloadPdf');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...';
+
+        try {
+            const roomId = '@Model.RoomId';
+            const TOKEN = getCookie('jwtToken') || localStorage.getItem('jwtToken');
+
+            if (!TOKEN) {
+                alert('Authentication token missing.');
+                return;
+            }
+
+            const res = await fetch(`${API_BASE}/api/Consultation/generate-pdf/${roomId}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${TOKEN}` }
+            });
+            const data = await res.json();
+            
+            if (res.ok && data.url) {
+                window.open(data.url, '_blank');
+            } else {
+                alert('Failed to generate PDF: ' + (data.message || res.statusText));
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error generating PDF');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
     async function saveRecommendation() {
         const text = document.getElementById('recText').value;
         const status = document.getElementById('recStatus');
         const roomId = '@Model.RoomId';
-        // Get meta or default
-        const apiMeta = document.querySelector('meta[name="api-base"]'); 
-        const API_BASE = (apiMeta && apiMeta.content) ? apiMeta.content : '';
-        if (!API_BASE) {
-            console.error("API Base URL not found in configuration.");
-            status.innerText = "Configuration Error: API URL missing.";
-            status.className = 'd-block mt-2 text-danger';
-            return;
-        }
         
-        // Find token logic - handle potential whitespace or different key case
-        const getCookie = (name) => {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
-        }
-        const TOKEN = getCookie('jwtToken');
+        const TOKEN = getCookie('jwtToken') || localStorage.getItem('jwtToken');
 
         if (!TOKEN) {
-            status.innerText = 'Error: No authentication token found. Please log in again.';
+            status.innerText = 'Error: No authentication token found.';
             status.className = 'd-block mt-2 text-danger';
             return;
         }
@@ -167,7 +202,6 @@
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${TOKEN}`
                 },
-                // Use PascalCase to match C# DTO exactly
                 body: JSON.stringify({ RoomId: roomId, Details: text })
             });
 
@@ -176,14 +210,13 @@
                 status.className = 'd-block mt-2 text-success';
             } else {
                 const errText = await res.text();
-                status.innerText = `Failed to save: ${res.status} ${res.statusText} - ${errText}`;
+                status.innerText = `Failed: ${res.status} ${res.statusText}`;
                 status.className = 'd-block mt-2 text-danger';
-                console.error("Save failed", res.status, errText);
+                console.error(errText);
             }
         } catch (e) {
-            status.innerText = `Error saving: ${e.message}`;
+            status.innerText = `Error: ${e.message}`;
             status.className = 'd-block mt-2 text-danger';
-            console.error(e);
         }
     }
 </script>

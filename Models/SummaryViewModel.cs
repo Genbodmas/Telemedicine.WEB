@@ -14,7 +14,7 @@ namespace Telemedicine.Web.Models
         public string Message { get; set; }
         public string FileUrl { get; set; }
         public DateTime Timestamp { get; set; }
-        public string SenderName { get; set; } // Optional if we want to show names
+        public string SenderName { get; set; }
     }
 
     public class NoteDto

@@ -40,6 +40,9 @@
         </main>
     </div>
 
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer" style="z-index: 1050;"></div>
+
     <footer class="border-top footer text-muted">
         <div class="container">
             &copy; 2026 - Telemedicine.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
@@ -47,8 +50,10 @@
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/auth-sync.js" asp-append-version="true"></script>
+    <script src="~/js/notification.js?v=2"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

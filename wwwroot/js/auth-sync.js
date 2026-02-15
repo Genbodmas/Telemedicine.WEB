@@ -27,6 +27,8 @@ function updateIdentityUI() {
             <span class="navbar-text me-3">
                 Hello, <strong>${name}</strong> (${role})
             </span>
+            <a class="btn btn-link text-dark text-decoration-none me-2" href="/Dashboard">Dashboard</a>
+            <a class="btn btn-link text-dark text-decoration-none me-2" href="/Profile">My Profile</a>
             <a class="btn btn-outline-danger btn-sm" href="#" onclick="logout()">Logout</a>
         `;
         authLinks.style.display = "none";

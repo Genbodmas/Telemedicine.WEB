@@ -30,7 +30,7 @@ namespace Telemedicine.Web.Controllers
             var model = new SummaryViewModel { RoomId = id };
             var role = Request.Cookies["userRole"];
 
-            // Fetch Chat History
+
             var chatRes = await _apiHelper.GetAsync<ApiResponse<List<ChatMessageDto>>>($"api/Consultation/history/{id}");
             if (chatRes != null && chatRes.Succeeded)
             {
@@ -44,7 +44,7 @@ namespace Telemedicine.Web.Controllers
                 model.Notes = notesRes.Data ?? new List<NoteDto>();
             }
 
-            // Fetch Recommendation
+
             var recRes = await _apiHelper.GetAsync<ApiResponse<string>>($"api/Consultation/recommendation/{id}");
             if (recRes != null && recRes.Succeeded)
             {

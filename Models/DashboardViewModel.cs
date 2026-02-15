@@ -20,7 +20,7 @@ namespace Telemedicine.Web.Models
         public int AppointmentId { get; set; }
         public DateTime ScheduledTime { get; set; }
         public string Status { get; set; }
-        public string CounterpartName { get; set; } // Doctor Name or Patient Name
+        public string CounterpartName { get; set; }
         public Guid? RoomId { get; set; }
     }
 }

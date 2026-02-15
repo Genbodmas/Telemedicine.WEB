@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Telemedicine.Web.Models.Auth;
 using Telemedicine.Web.Utils;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
 
 namespace Telemedicine.Web.Controllers
 {
@@ -34,6 +37,26 @@ namespace Telemedicine.Web.Controllers
                 Response.Cookies.Append("userId", response.UserId.ToString(), new CookieOptions { HttpOnly = false });
                 Response.Cookies.Append("userRole", response.Role, new CookieOptions { HttpOnly = false });
 
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, response.FullName),
+                    new Claim(ClaimTypes.NameIdentifier, response.UserId.ToString()),
+                    new Claim(ClaimTypes.Role, response.Role),
+                    new Claim("jwt", response.Token) 
+                };
+
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var authProperties = new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    ExpiresUtc = DateTime.UtcNow.AddMinutes(60)
+                };
+
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(claimsIdentity),
+                    authProperties);
+
                 return RedirectToAction("Index", "Dashboard");
             }
 
@@ -41,46 +64,13 @@ namespace Telemedicine.Web.Controllers
             return View(model);
         }
 
-        [HttpGet]
-        public IActionResult Register()
-        {
-            return View();
-        }
 
-        [HttpPost]
-        public async Task<IActionResult> Register(RegisterViewModel model)
-        {
-            if (!ModelState.IsValid)
-                return View(model);
-
-            var registerData = new 
-            {
-                model.Email,
-                model.Password,
-                model.FullName,
-                model.Role
-            };
-            
-            try 
-            {
-                 var response = await _apiHelper.PostAsync<object, object>("api/Auth/register", registerData);
-                 if (response != null)
-                 {
-                     return RedirectToAction("Login");
-                 }
-            }
-            catch
-            {
-                ModelState.AddModelError("", "Registration failed.");
-            }
-            
-            ModelState.AddModelError("", "Registration failed. Please try again.");
-            return View(model);
-        }
 
         [HttpGet]
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            
             Response.Cookies.Delete("jwtToken");
             Response.Cookies.Delete("userName");
             Response.Cookies.Delete("userId");

@@ -1,6 +1,4 @@
-// Check if we have cookies set by server and save to localStorage for SignalR
-// This is a bridge because standard SignalR lib doesn't read non-HttpOnly cookies easily in all configs, 
-// but we explicitly set HttpOnly=false for 'jwtToken' in AuthController.
+
 
 function getCookie(name) {
     const value = `; ${document.cookie}`;

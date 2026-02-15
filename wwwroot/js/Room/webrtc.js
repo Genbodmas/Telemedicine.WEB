@@ -1,6 +1,4 @@
-// =============================================
-//  WebRTC + SignalR — Consultation Room Logic
-// =============================================
+
 
 // DOM References
 const remoteVideo = document.getElementById("remoteVideo");
@@ -135,8 +133,8 @@ connection.on("ReceiveSignal", async (userId, type, payload) => {
     }
 });
 
-connection.on("ReceiveMessage", (senderId, message, fileUrl, timestamp) => {
-    appendMessage(senderId, message, fileUrl, timestamp);
+connection.on("ReceiveMessage", (senderId, userName, message, fileUrl, timestamp) => {
+    appendMessage(senderId, message, fileUrl, timestamp, userName);
 });
 
 connection.on("ReceiveHistory", (messages) => {

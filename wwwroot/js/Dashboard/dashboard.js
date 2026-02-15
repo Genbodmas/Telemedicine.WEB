@@ -125,4 +125,60 @@
             console.error('Delete failed:', e);
         }
     }
+    // Doctor: Analytics
+    const chartCanvas = document.getElementById('appointmentsChart');
+    if (chartCanvas) {
+        loadDoctorAnalytics(chartCanvas);
+    }
+
+    async function loadDoctorAnalytics(canvas) {
+        try {
+            const res = await fetch(`${API_BASE}/api/Analytics/summary`, {
+                headers: { 'Authorization': `Bearer ${TOKEN}` }
+            });
+            const payload = await res.json();
+
+            if (payload.succeeded) {
+                const data = payload.data;
+                // Update specific stats
+                safeSetText('statTotalPatients', data.totalPatients);
+                safeSetText('statTotalAppts', data.totalAppointments);
+                safeSetText('statUpcoming', data.upcomingAppointments);
+
+
+                // Render Chart
+                const ctx = canvas.getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.weeklyTrend.map(d => d.date),
+                        datasets: [{
+                            label: 'Appointments',
+                            data: data.weeklyTrend.map(d => d.count),
+                            borderColor: '#0d6efd',
+                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                        }
+                    }
+                });
+            }
+        } catch (e) {
+            console.error('Analytics load failed:', e);
+        }
+    }
+
+    function safeSetText(id, val) {
+        const el = document.getElementById(id);
+        if (el) el.innerText = val;
+    }
 })();

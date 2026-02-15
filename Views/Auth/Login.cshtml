@@ -1,45 +1,61 @@
 @model Telemedicine.Web.Models.Auth.LoginViewModel
 @{
     ViewData["Title"] = "Login";
+    Layout = "_Layout";
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="card-title mb-0">Login</h3>
-                </div>
-                <div class="card-body">
-                    <form asp-action="Login" method="post" id="loginForm">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                        
-                        <div class="mb-3">
-                            <label asp-for="Email" class="form-label">Email Address</label>
-                            <input asp-for="Email" class="form-control" placeholder="name@example.com" />
-                            <span asp-validation-for="Email" class="text-danger"></span>
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-5">
+        <div class="text-center mb-4">
+            <h1 class="fw-bold text-primary">Telemedicine<span class="text-secondary">Plus</span></h1>
+            <p class="text-muted">Secure Access to Your Healthcare Professionals</p>
+        </div>
+        
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-body p-5">
+                <h3 class="card-title text-center mb-4">Welcome Back</h3>
+                
+                <form asp-controller="Auth" asp-action="Login" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    @if (ViewData.ModelState.Keys.Any(k => ViewData.ModelState[k].Errors.Any()))
+                    {
+                        <div class="alert alert-danger">
+                            @Html.ValidationSummary(true, "")
                         </div>
-                        
-                        <div class="mb-3">
-                            <label asp-for="Password" class="form-label">Password</label>
-                            <input asp-for="Password" class="form-control" placeholder="Password" />
-                            <span asp-validation-for="Password" class="text-danger"></span>
-                        </div>
-                        
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">Login</button>
-                        </div>
-                    </form>
-                </div>
-                <div class="card-footer text-center">
-                    <p>Don't have an account? <a asp-action="Register">Register here</a></p>
-                </div>
+                    }
+
+                    <div class="form-floating mb-3">
+                        <input asp-for="Email" class="form-control" placeholder="name@example.com" />
+                        <label asp-for="Email">Email Address</label>
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-floating mb-4">
+                        <input asp-for="Password" class="form-control" placeholder="Password" type="password" />
+                        <label asp-for="Password">Password</label>
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-grid mb-4">
+                        <button type="submit" class="btn btn-primary btn-lg py-3 rounded-3 fw-bold">Sign In</button>
+                    </div>
+
+                    <div class="text-center">
+                        <p class="text-muted mb-0">Don't have an account? <a asp-controller="Auth" asp-action="Register" class="text-decoration-none fw-bold">Register Now</a></p>
+                    </div>
+                    
+                    <input type="hidden" name="ReturnUrl" value="@Context.Request.Query["ReturnUrl"]" />
+                </form>
             </div>
+        </div>
+        
+        <div class="text-center mt-4 text-muted small">
+            &copy; @DateTime.Now.Year Telemedicine Platform. All rights reserved.
         </div>
     </div>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-    <script src="~/js/Auth/login.js"></script>
 }

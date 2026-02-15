@@ -23,8 +23,54 @@
         </div>
     }
 
+
+    @if (Model.Role == "Doctor")
+    {
+        <div class="row mb-4">
+
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 border-start border-4 border-primary">
+                    <div class="card-body">
+                        <h6 class="text-uppercase text-muted small">Total Patients</h6>
+                        <h3 class="mb-0" id="statTotalPatients">-</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 border-start border-4 border-success">
+                    <div class="card-body">
+                        <h6 class="text-uppercase text-muted small">Total Appts</h6>
+                        <h3 class="mb-0" id="statTotalAppts">-</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 border-start border-4 border-warning">
+                    <div class="card-body">
+                        <h6 class="text-uppercase text-muted small">Upcoming</h6>
+                        <h3 class="mb-0" id="statUpcoming">-</h3>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Appointments Overview (Last 7 Days)</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="appointmentsChart" style="max-height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
     <div class="row">
-        <!-- Patient: Book Appointment Section -->
+
         @if (Model.Role == "Patient")
         {
             <div class="col-md-4 mb-4">
@@ -44,7 +90,7 @@
                                     }
                                 </select>
                             </div>
-                            <!-- Doctor Availability Display -->
+
                             <div id="availabilityInfo" class="mb-3" style="display:none;">
                                 <label class="form-label text-muted small">Available Hours</label>
                                 <div id="availabilitySlots" class="list-group list-group-flush small"></div>
@@ -65,7 +111,7 @@
             </div>
         }
 
-        <!-- Doctor: Set Availability Section -->
+
         @if (Model.Role == "Doctor")
         {
             <div class="col-md-4 mb-4">
@@ -110,7 +156,7 @@
             </div>
         }
 
-        <!-- My Appointments Section -->
+
         <div class="@(Model.Role == "Patient" || Model.Role == "Doctor" ? "col-md-8" : "col-md-12")">
             <div class="card shadow-sm">
                 <div class="card-header bg-success text-white">
@@ -153,14 +199,12 @@
                                             <td>
                                                 @if (appt.Status == "Completed")
                                                 {
-                                                    <!-- Completed call — View Summary -->
                                                     <a href="/Room/Summary?id=@appt.RoomId" class="btn btn-sm btn-outline-success">
                                                         <i class="bi bi-file-earmark-text"></i> View Summary
                                                     </a>
                                                 }
                                                 else if (appt.RoomId.HasValue)
                                                 {
-                                                    <!-- Active call — Join -->
                                                     <a href="/Room/PreRoom/@(appt.RoomId)" class="btn btn-sm btn-primary">
                                                         <i class="bi bi-camera-video-fill"></i> Join Call
                                                     </a>
@@ -195,5 +239,6 @@
 </div>
 
 @section Scripts {
-    <script src="/js/Dashboard/dashboard.js?v=5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/js/Dashboard/dashboard.js?v=6"></script>
 }

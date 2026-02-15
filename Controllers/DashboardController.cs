@@ -22,14 +22,14 @@ namespace Telemedicine.Web.Controllers
 
             ViewBag.ApiBaseUrl = _configuration["ApiSettings:BaseUrl"];
 
-            // Fetch My Appointments
+
             var appointmentResponse = await _apiHelper.GetAsync<ApiResponse<List<AppointmentDto>>>("api/Appointment/my-appointments");
             if (appointmentResponse != null && appointmentResponse.Succeeded)
             {
                 model.Appointments = appointmentResponse.Data;
             }
 
-            // If Patient, fetch Doctors
+
             if (role == "Patient")
             {
                 var doctorsResponse = await _apiHelper.GetAsync<ApiResponse<List<UserDto>>>("api/Appointment/doctors");
@@ -67,7 +67,7 @@ namespace Telemedicine.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> StartConsultation(int appointmentId)
         {
-            // Call the correct API endpoint: api/Consultation/start/{appointmentId}
+
             var response = await _apiHelper.PostAsync<object, StartConsultationResponse>(
                 $"api/Consultation/start/{appointmentId}", new { });
 

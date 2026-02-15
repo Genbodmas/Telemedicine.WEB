@@ -21,6 +21,6 @@ namespace Telemedicine.Web.Models.Auth
         public string ConfirmPassword { get; set; } = string.Empty;
 
         [Required]
-        public string Role { get; set; } = "Patient"; // Default to Patient
+        public string Role { get; set; } = "Patient";
     }
 }

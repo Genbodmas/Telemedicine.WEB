@@ -19,7 +19,7 @@ namespace Telemedicine.Web.Middleware
         {
             var path = context.Request.Path.Value?.TrimEnd('/') ?? "";
 
-            // Allow public paths, static files, and error pages
+
             if (IsPublicPath(path))
             {
                 await _next(context);
@@ -30,7 +30,7 @@ namespace Telemedicine.Web.Middleware
 
             if (string.IsNullOrEmpty(token) || IsTokenExpired(token))
             {
-                // Clear stale cookies
+
                 context.Response.Cookies.Delete("jwtToken");
                 context.Response.Cookies.Delete("userName");
                 context.Response.Cookies.Delete("userId");
@@ -52,7 +52,7 @@ namespace Telemedicine.Web.Middleware
                 || path.StartsWith("/lib", StringComparison.OrdinalIgnoreCase)
                 || path.StartsWith("/images", StringComparison.OrdinalIgnoreCase)
                 || path.StartsWith("/_", StringComparison.OrdinalIgnoreCase)
-                || path.Contains('.'); // static files
+                || path.Contains('.');
         }
 
         private static bool IsTokenExpired(string token)
@@ -65,7 +65,7 @@ namespace Telemedicine.Web.Middleware
             }
             catch
             {
-                return true; // If we can't read it, treat as expired
+                return true;
             }
         }
     }

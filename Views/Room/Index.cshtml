@@ -21,7 +21,7 @@
 </head>
 <body>
 
-<!-- Top Bar -->
+
 <header class="top-bar">
     <div class="top-left">
         <span class="brand"><i class="bi bi-heart-pulse"></i> TeleMed</span>
@@ -35,11 +35,11 @@
     </div>
 </header>
 
-<!-- Main Content -->
+
 <div class="main-content">
-    <!-- Video Section (Left ~65%) -->
+
     <section class="video-section">
-        <!-- Remote Video -->
+
         <div class="video-card remote-card">
             <video id="remoteVideo" autoplay playsinline></video>
             <div class="video-name-tag">
@@ -51,7 +51,7 @@
             </div>
         </div>
 
-        <!-- Local Video (Self View) -->
+
         <div class="video-card local-card">
             <video id="localVideo" autoplay muted playsinline></video>
             <div class="video-name-tag">
@@ -59,7 +59,7 @@
             </div>
         </div>
 
-        <!-- Bottom Controls -->
+
         <div class="controls-bar">
             <button id="btnToggleAudio" class="ctrl-btn" title="Mic">
                 <i class="bi bi-mic-fill"></i>
@@ -76,9 +76,9 @@
         </div>
     </section>
 
-    <!-- Right Panel (Chat + Notes ~35%) -->
+
     <aside class="right-panel">
-        <!-- Tab Navigation -->
+
         <div class="panel-tabs">
             <button class="panel-tab active" data-target="chatPanel" id="tabChat">
                 <i class="bi bi-chat-left-text"></i> Chat
@@ -89,7 +89,7 @@
             </button>
         </div>
 
-        <!-- Chat Panel -->
+
         <div class="panel-body" id="chatPanel">
             <div class="chat-messages" id="chatMessages">
                 <div class="chat-empty-state">
@@ -105,7 +105,7 @@
             </div>
         </div>
 
-        <!-- Notes Panel (hidden by default, toggled by tab) -->
+
         <div class="panel-body" id="notesPanel" style="display:none;">
             <div class="notes-body">
                 <div class="notes-info">
@@ -121,7 +121,7 @@
     </aside>
 </div>
 
-<!-- Custom Modal -->
+
 <div class="custom-modal-backdrop" id="customModalBackdrop" style="display:none;">
     <div class="custom-modal">
         <div class="custom-modal-header">
@@ -134,7 +134,7 @@
     </div>
 </div>
 
-<!-- Confirm Modal -->
+
 <div class="custom-modal-backdrop" id="confirmModalBackdrop" style="display:none;">
     <div class="custom-modal">
         <div class="custom-modal-header">
