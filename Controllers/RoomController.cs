@@ -34,14 +34,14 @@ namespace Telemedicine.Web.Controllers
             var chatRes = await _apiHelper.GetAsync<ApiResponse<List<ChatMessageDto>>>($"api/Consultation/history/{id}");
             if (chatRes != null && chatRes.Succeeded)
             {
-                model.ChatHistory = chatRes.Data;
+                model.ChatHistory = chatRes.Data ?? new List<ChatMessageDto>();
             }
 
  
             var notesRes = await _apiHelper.GetAsync<ApiResponse<List<NoteDto>>>($"api/Consultation/notes/{id}");
             if (notesRes != null && notesRes.Succeeded)
             {
-                model.Notes = notesRes.Data;
+                model.Notes = notesRes.Data ?? new List<NoteDto>();
             }
 
             // Fetch Recommendation

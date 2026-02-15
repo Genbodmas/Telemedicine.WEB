@@ -4,8 +4,8 @@
     ViewData["Title"] = "Consultation Room";
     Layout = null; /* Full-page layout, no navbar */
     var roomId = ViewBag.RoomId;
-    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-    var role = User.Claims.FirstOrDefault(c => c.Type == "Role" || c.Type == System.Security.Claims.ClaimTypes.Role)?.Value;
+    var currentUserId = Context.Request.Cookies["userId"];
+    var role = Context.Request.Cookies["userRole"];
     var isDoctor = role == "Doctor";
 }
 <!DOCTYPE html>

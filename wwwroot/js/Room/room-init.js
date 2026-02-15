@@ -13,13 +13,14 @@
             if (!content) return;
             status.innerText = "Saving...";
             try {
-                const response = await fetch(`${API_BASE_URL}/api/Consultation/notes`, {
+                const response = await fetch(`${API_BASE_URL}/api/Consultation/notes-room`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                         "Authorization": `Bearer ${TOKEN}`
                     },
-                    body: JSON.stringify({ appointmentId: 1, content: content })
+                    // Use PascalCase to match DTO
+                    body: JSON.stringify({ RoomId: ROOM_ID, Content: content })
                 });
                 if (response.ok) {
                     status.innerText = "✓ Note saved!";

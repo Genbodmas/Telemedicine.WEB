@@ -29,7 +29,7 @@ namespace Telemedicine.Web.Controllers
 
             if (response != null && !string.IsNullOrEmpty(response.Token))
             {
-                Response.Cookies.Append("jwtToken", response.Token, new CookieOptions { HttpOnly = false, Secure = true, SameSite = SameSiteMode.Strict, Expires = DateTime.UtcNow.AddHours(1) });
+                Response.Cookies.Append("jwtToken", response.Token, new CookieOptions { HttpOnly = false, Secure = true, SameSite = SameSiteMode.Lax, Expires = DateTime.UtcNow.AddHours(1) });
                 Response.Cookies.Append("userName", response.FullName, new CookieOptions { HttpOnly = false });
                 Response.Cookies.Append("userId", response.UserId.ToString(), new CookieOptions { HttpOnly = false });
                 Response.Cookies.Append("userRole", response.Role, new CookieOptions { HttpOnly = false });

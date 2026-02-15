@@ -1,9 +1,12 @@
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @model Telemedicine.Web.Models.SummaryViewModel
 @{
     ViewData["Title"] = "Consultation Summary";
     var currentUserRole = Context.Request.Cookies["userRole"];
     bool isDoctor = currentUserRole == "Doctor";
+    var apiBaseUrl = Configuration["ApiSettings:BaseUrl"];
 }
+...
 
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -132,10 +135,27 @@
         const roomId = '@Model.RoomId';
         // Get meta or default
         const apiMeta = document.querySelector('meta[name="api-base"]'); 
-        const API_BASE = apiMeta ? apiMeta.content : 'https://localhost:7182';
+        const API_BASE = (apiMeta && apiMeta.content) ? apiMeta.content : '';
+        if (!API_BASE) {
+            console.error("API Base URL not found in configuration.");
+            status.innerText = "Configuration Error: API URL missing.";
+            status.className = 'd-block mt-2 text-danger';
+            return;
+        }
         
-        const tokenCookie = document.cookie.split(';').find(c => c.trim().startsWith('jwtToken='));
-        const TOKEN = tokenCookie ? tokenCookie.split('=')[1] : null;
+        // Find token logic - handle potential whitespace or different key case
+        const getCookie = (name) => {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+        const TOKEN = getCookie('jwtToken');
+
+        if (!TOKEN) {
+            status.innerText = 'Error: No authentication token found. Please log in again.';
+            status.className = 'd-block mt-2 text-danger';
+            return;
+        }
 
         status.innerText = 'Saving...';
         status.className = 'd-block mt-2 text-muted';
@@ -147,19 +167,23 @@
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${TOKEN}`
                 },
-                body: JSON.stringify({ roomId: roomId, details: text })
+                // Use PascalCase to match C# DTO exactly
+                body: JSON.stringify({ RoomId: roomId, Details: text })
             });
 
             if (res.ok) {
                 status.innerText = 'Saved successfully!';
                 status.className = 'd-block mt-2 text-success';
             } else {
-                status.innerText = 'Failed to save.';
+                const errText = await res.text();
+                status.innerText = `Failed to save: ${res.status} ${res.statusText} - ${errText}`;
                 status.className = 'd-block mt-2 text-danger';
+                console.error("Save failed", res.status, errText);
             }
         } catch (e) {
-            status.innerText = 'Error saving.';
+            status.innerText = `Error saving: ${e.message}`;
             status.className = 'd-block mt-2 text-danger';
+            console.error(e);
         }
     }
 </script>
@@ -169,4 +193,4 @@
     .timeline-item { border-left: 2px solid #ddd; padding-left: 15px; margin-bottom: 20px; position: relative; }
     .timeline-item::before { content: ''; position: absolute; left: -6px; top: 0; width: 10px; height: 10px; border-radius: 50%; background: #0dcaf0; }
 </style>
-<meta name="api-base" content="@ViewBag.ApiBaseUrl" />
+<meta name="api-base" content="@Configuration["ApiSettings:BaseUrl"]" />
